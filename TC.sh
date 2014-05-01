@@ -27,19 +27,21 @@ do
    cat /proc/net/nf_conntrack |awk  '{print $7}' |awk  -F "=" '{print $2}' | sort -u> /TC/current.txt
    cat /TC/previous.txt
    IPS=$(grep -f /TC/previous.txt /TC/current.txt  -v)
+   
    for IP in $IPS; do
 
-   # attaching every new IP destination to a filter
-   echo Creating filters...
-   tc filter add dev br-lan protocol ip parent 1:0 prio 1 u32 match ip dst 192.168.142.0/24 flowid 1:10
-   tc filter add dev eth1 protocol ip parent 2:0 prio 1 u32 match ip src $IP/24 flowid 2:10
+       # attaching every new IP destination to a filter
+       echo Creating filters...
+       tc filter add dev br-lan protocol ip parent 1:0 prio 1 u32 match ip dst 192.168.142.0/24 flowid 1:10
+       tc filter add dev eth1 protocol ip parent 2:0 prio 1 u32 match ip src $IP/24 flowid 2:10
    
-   #Fair Queuing
-    echo Finishing...
-    tc qdisc add dev br-lan parent 1:1 handle 20: sfq perturb 10
-    tc qdisc add dev eth1 parent 2:1 handle 30: sfq perturb 10
-    mv current.txt previous.txt
+       #Fair Queuing
+       echo Finishing...
+       tc qdisc add dev br-lan parent 1:1 handle 20: sfq perturb 10
+       tc qdisc add dev eth1 parent 2:1 handle 30: sfq perturb 10
+       mv current.txt previous.txt
     done
+    
     #wait for one second and do it for a new source IP address
     sleep 1
 
